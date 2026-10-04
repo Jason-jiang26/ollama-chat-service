@@ -97,3 +97,27 @@ def test_bad_reply_is_rejected(payload):
 def test_non_json_reply_is_rejected():
     with client_with(lambda request: httpx.Response(200, text="not json")) as client:
         assert client.post("/chat", json={"message": "hello"}).status_code == 502
+
+
+def test_get_chat_is_not_allowed():
+    def unexpected(request):
+        pytest.fail("GET /chat 不应该调用 Ollama")
+
+    with client_with(unexpected) as client:
+        response = client.get("/chat")
+        assert response.status_code == 405
+        assert response.json() == {"detail": "Method Not Allowed"}
+
+
+def test_info_returns_service_and_model():
+    def unexpected(request):
+        pytest.fail("/info 不应该调用 Ollama")
+
+    with client_with(unexpected) as client:
+        response = client.get("/info")
+
+        assert response.status_code == 200
+        assert response.json() == {
+            "service": client.app.title,
+            "model": "gemma3:270m",
+        }

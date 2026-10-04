@@ -152,7 +152,7 @@ def create_app(
             yield
 
     application = FastAPI(
-        title="Local Ollama Chat Service",
+        title="姜杰中的本地AI聊天服务",
         description="基于 FastAPI 和 Ollama 的本地单轮对话 API。",
         version="0.1.0",
         lifespan=lifespan,
@@ -181,6 +181,13 @@ def create_app(
     async def chat_endpoint(body: ChatRequest, request: Request) -> ChatReply:
         reply = await request.app.state.backend.chat(body.message)
         return ChatReply(model=settings.model, reply=reply)
+
+    @application.get("/info")
+    async def info() -> dict[str, str]:
+        return {
+            "service": application.title,
+            "model": settings.model,
+        }
 
     return application
 

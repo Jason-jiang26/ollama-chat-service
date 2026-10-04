@@ -8,6 +8,7 @@
 | --- | --- |
 | `GET /health` | 检查 FastAPI 进程是否响应 |
 | `GET /ready` | 检查 Ollama 可连接且配置的模型已下载 |
+| `GET /info` | 返回服务标题与配置的模型名称，无需调用 Ollama |
 | `POST /chat` | 接收一条文本消息，返回模型生成的 JSON 回复 |
 | `GET /docs` | 在浏览器中查看并测试接口 |
 
@@ -80,6 +81,10 @@ python -m venv .venv
 {"model": "gemma3:270m", "reply": "……模型生成的文本……"}
 ```
 
+浏览器也可以直接打开 <http://127.0.0.1:8000/info> 查看服务标题和模型名称。
+
+使用 VS Code 时，打开整个项目文件夹，并选择 `.venv\Scripts\python.exe` 作为 Python 解释器。服务通过上述 Uvicorn 命令启动；直接运行 `main.py` 会创建应用对象后退出。
+
 ### 4. 用 PowerShell 测试
 
 保留运行服务的窗口，新开一个 PowerShell：
@@ -103,7 +108,13 @@ Invoke-RestMethod -Uri "http://127.0.0.1:8000/chat" -Method Post -ContentType "a
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-覆盖中文输入、空输入、输入过长、类型错误、模型缺失、连接失败、超时和异常回复等场景。
+覆盖中文输入、空输入、输入过长、类型错误、模型缺失、连接失败、超时、异常回复、`GET /chat` 返回 405，以及 `/info` 返回配置信息等场景。2026-10-04 本机验证结果为 **23 passed**。
+
+若 Windows 提示无法写入 `.pytest_cache`，可以使用 `-p no:cacheprovider` 关闭 pytest 缓存后运行测试：
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
+```
 
 真实链路测试需要两个服务均已启动：
 

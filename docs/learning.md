@@ -8,8 +8,8 @@
 | --- | --- | --- |
 | Ollama 与模型 | 本机 11434 端口与 gemma3:270m | Ollama 是什么？模型参数量与模型文件大小有什么区别？ |
 | Python 环境 | `.venv`、依赖清单 | 为什么不把所有依赖装进 conda base？如何复现环境？ |
-| HTTP / JSON | `/health`、`/ready`、`/chat` | GET 与 POST 有什么区别？请求体和响应体是什么？ |
-| FastAPI | `create_app` 与三个路由 | 浏览器的 `/docs` 是怎样生成的？FastAPI 与 Ollama 分别在哪个端口？ |
+| HTTP / JSON | `/health`、`/ready`、`/chat`、`/info` | GET 与 POST 有什么区别？请求体和响应体是什么？ |
+| FastAPI | `create_app` 与四个业务路由 | 浏览器的 `/docs` 是怎样生成的？FastAPI 与 Ollama 分别在哪个端口？ |
 | Pydantic | `ChatRequest`、`ChatReply` | 空消息、数字和超长消息如何被拦截？422 代表什么？ |
 | Ollama API | `OllamaBackend.chat` | `model`、`messages`、`stream` 分别控制什么？ |
 | 异步与超时 | `async def`、`await`、`asyncio.wait_for` | 等待模型时为什么使用异步？超时后怎样返回？ |
@@ -25,7 +25,17 @@
 4. `OllamaBackend.ready`：查询安装的模型，检查配置的模型名称是否存在。
 5. `OllamaBackend.chat`：组织 `messages`，调用 `/api/chat`，解析并验证文本回复。
 6. `lifespan`：应用启动时建立共享 HTTP 客户端，退出时释放连接。
-7. 三个路由：将用户请求交给相应逻辑，返回有定义的 JSON 结构。
+7. 四个业务路由：将用户请求交给相应逻辑，返回有定义的 JSON 结构；`/info` 直接返回服务标题与配置的模型名称。
+
+## 2026-10-04 实践记录
+
+- 修改服务标题，保存后通过 Uvicorn `--reload` 在接口文档中看到变化。
+- 使用项目 `.venv` 的 Python，定位并解决 VS Code 选择了其他解释器导致的依赖导入错误。
+- 新增 `GET /info`，修正装饰器与函数的缩进，使浏览器能够访问新接口。
+- 编写 `GET /chat` 返回 405 和 `/info` 返回配置信息的测试，全量运行结果为 23 passed。
+- 用真实调用脚本验证服务链路，并记录模型将“5加5”回答为“5”的案例。接口成功与答案正确需要分别验证。
+
+复习：`main:app` 表示从 `main.py` 导入变量 `app`；Pydantic 校验用户输入；`async` / `await` 允许等待网络响应时处理其他请求；`lifespan` 在启动时创建共享 HTTP 客户端，在关闭时释放连接。`os.getenv("名称", "默认值")` 优先使用已有的环境变量，没有设置时才使用默认值。
 
 ## 做一次你自己的修改
 
